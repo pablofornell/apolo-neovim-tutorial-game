@@ -1,4 +1,4 @@
-# atenea-neovim-tutorial-game
+# Apolo Neovim Tutorial Game
 
 **Prime Motions** — a tiny in-browser Neovim emulator that teaches the keymaps
 from ThePrimeagen's `init.lua`. Pure vanilla HTML/CSS/JS, no build step, no
