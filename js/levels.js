@@ -222,13 +222,13 @@ L({title:"Join lines with J",
   <div class="card do"><h3>Goal</h3>Press <kbd>J</kbd> to make <code>const sum = 1 + 2 + 3</code>.</div>`,
   check:()=>S.lines.length===1 && S.lines[0].replace(/\s+/g," ").trim()==="const sum = 1 + 2 + 3"}),
 
-L({title:"Move lines in visual: J / K",
+L({title:"Move lines in visual: K / L",
   goal:"Reorder the steps to 1,2,3,4 by moving lines in V-LINE mode",
   buf:["step 1","step 3","step 2","step 4"], cur:{row:1,col:0}, par:null,
-  lesson:`<h2>The signature remap: <kbd>J</kbd>/<kbd>K</kbd> in visual</h2><div class="sub">remap.lua</div>
-  <p>Select lines with <kbd>V</kbd>, then <kbd>J</kbd> drags them <b>down</b> and <kbd>K</kbd> drags them <b>up</b> — auto-reindenting.</p>
-  <div class="card"><code>vmap J :m '>+1&lt;CR&gt;gv=gv</code><br><code>vmap K :m '&lt;-2&lt;CR&gt;gv=gv</code></div>
-  <div class="card do"><h3>Goal</h3>On "step 3": press <kbd>V</kbd> then <kbd>J</kbd> to push it below "step 2". End with steps in order.</div>`,
+  lesson:`<h2>The signature remap: <kbd>K</kbd>/<kbd>L</kbd> in visual</h2><div class="sub">remap.lua</div>
+  <p>Select lines with <kbd>V</kbd>, then <kbd>K</kbd> drags them <b>down</b> and <kbd>L</kbd> drags them <b>up</b> — auto-reindenting. (Shift of your <kbd>k</kbd>=down / <kbd>l</kbd>=up, so it stays coherent with jklñ.)</p>
+  <div class="card"><code>vmap K :m '>+1&lt;CR&gt;gv=gv</code><br><code>vmap L :m '&lt;-2&lt;CR&gt;gv=gv</code></div>
+  <div class="card do"><h3>Goal</h3>On "step 3": press <kbd>V</kbd> then <kbd>K</kbd> to push it below "step 2". End with steps in order.</div>`,
   check:()=>S.lines.join("|")==="step 1|step 2|step 3|step 4"}),
 
 L({title:"The greatest remap: <leader>p",

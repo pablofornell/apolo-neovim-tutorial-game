@@ -223,8 +223,8 @@ function handleVisual(key,e){
     case"d":case"x": snapshot(); S.reg=selectedText(); deleteSelection(); log("d"); return;
     case"y": S.reg=selectedText(); S.cursor={...visualRange().lo}; S.mode="normal";S.anchor=null; log("y"); return;
     case"c": snapshot(); S.reg=selectedText(); deleteSelection(); setMode("insert"); log("c"); return;
-    case"J": snapshot(); moveLines(1); log("J"); return;   // visual line move down
-    case"K": snapshot(); moveLines(-1); log("K"); return;  // visual line move up
+    case"K": snapshot(); moveLines(1); log("K"); return;   // visual line move down (Shift+k)
+    case"L": snapshot(); moveLines(-1); log("L"); return;  // visual line move up (Shift+l)
     case"v":case"V": S.mode="normal";S.anchor=null; return;
   }
   if(S.pending==="g"&&key==="g"){S.pending="";motion("gg");log("gg");}
