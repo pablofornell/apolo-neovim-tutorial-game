@@ -136,3 +136,28 @@ kbd{background:#00171d;border:1px solid var(--line);border-bottom-width:2px;bord
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
 ::-webkit-scrollbar-track{background:transparent}
+
+/* ═══ Red-glasses vision mode ═══════════════════════════════════════════
+   Mirrors the Neovim red-glasses theme (apolo-configs). Red-tinted glasses
+   block blue/green light, so the solarized palette above collapses to near-
+   black. This override pushes every token into the red channel — warm hues
+   only, separated by red-brightness — so it stays legible through the lens.
+   The green token (was lime #b7fa00, invisible behind red) becomes amber.
+   Toggled by the 🔵/🔴 button in the top bar; choice saved in localStorage. */
+body.redglasses{
+  --bg:#160d0d; --bg2:#1f1010; --bg3:#241414; --ov:#0f0808;
+  --txt:#d8ab90; --sub:#b58a7a; --muted:#8a5952;
+  --pine:#ff6a4d; --foam:#ffdca8; --iris:#ff5c9e; --gold:#ffcf5c;
+  --rose:#ff7a4d; --love:#ff5c9e; --green:#ffb340;
+  --hl:#3d1c1c; --line:#3a201c;
+  background:radial-gradient(1200px 700px at 70% -10%,#241414,var(--bg));
+}
+/* hard-coded blue-black spots that don't read from a token */
+body.redglasses .ccline{background:#3a1e1e}
+body.redglasses .cur-cell{color:#160d0d}
+body.redglasses .sel{background:#4a2020}
+body.redglasses .mode{color:#160d0d}
+body.redglasses kbd,
+body.redglasses .lesson code{background:#1a0d0d}
+body.redglasses .win{background:rgba(22,13,13,.85)}
+body.redglasses .pop{background:rgba(22,13,13,.55)}
