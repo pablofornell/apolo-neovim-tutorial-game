@@ -2,6 +2,7 @@
 function motion(m){
   const c=S.cursor;
   if(m==="w") m="b"; else if(m==="b") m="w";   // user swap: w → left, b → right
+  if(m==="$") m="0"; else if(m==="0") m="$"; // user swap: $ → start, 0 → end
   switch(m){
     case"h":c.col=clamp(c.col-1,0,maxCol());break;
     case"l":c.col=clamp(c.col+1,0,maxCol());break;

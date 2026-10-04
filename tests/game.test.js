@@ -49,6 +49,7 @@ function createGame(){
 
 const ctrlC={ctrl:"c"};
 const solutions=[
+  ["Line ends: 0 ^ $",["0"]],
   ["Create a file: :e",[":e notes.txt","Enter","ahello",ctrlC,":w","Enter"]],
   ["Open a file: :e",[":e todo.txt","Enter"]],
   ["Save a file: :w",["ciwready",ctrlC,":w","Enter"]],
@@ -60,7 +61,7 @@ const solutions=[
   ["Copy and paste a line: yy p",["yyp"]],
   ["Undo and redo: u / Ctrl-r",["ddu",{ctrl:"r"}]],
   ["Select a line: V",["Vyp"]],
-  ["Move selected text: v d p",["vñd$p"]],
+  ["Move selected text: v d p",["vñd0p"]],
   ["Change a word: ciw",["ciwgoodbye",ctrlC]],
 ];
 
@@ -72,6 +73,83 @@ for(const [title,steps] of solutions){
     assert.equal(game.S.won,true,"Documented key sequence must complete the lesson");
   });
 }
+
+test("Swapped line ends match normal-mode Neovim movements and leave ^ unchanged",()=>{
+  const game=createGame();game.load("Create a file: :e");
+  game.S.lines=["  alpha beta "];game.S.cursor={row:0,col:6};
+  game.play("$");assert.equal(game.S.cursor.col,0);
+  game.play("0");assert.equal(game.S.cursor.col,12);
+  game.play("^");assert.equal(game.S.cursor.col,2);
+  game.S.lines=[""];game.S.cursor={row:0,col:0};
+  game.play("$0");assert.equal(game.S.cursor.col,0);
+});
+
+// These outcomes were checked in headless Neovim with the user's keymaps.lua.
+for(const [keys,lines,register,col] of [
+  ["d$","a beta ","  alph",0],
+  ["d0","  alph","a beta ",5],
+  ["y$","  alpha beta ","  alph",0],
+  ["y0","  alpha beta ","a beta ",6],
+  ["c$","Xa beta ","  alph",0],
+  ["c0","  alphX","a beta ",6],
+  ["v$y","  alpha beta ","  alpha",0],
+  ["v0y","  alpha beta ","a beta ",6],
+]){
+  test(`Swapped line-end operation matches Neovim: ${keys}`,()=>{
+    const game=createGame();game.load("Create a file: :e");
+    game.S.lines=["  alpha beta "];game.S.cursor={row:0,col:6};
+    game.play(keys);if(keys.startsWith("c"))game.play("X","Escape");
+    assert.equal(game.S.lines.join("\n"),lines);assert.equal(game.S.reg.text,register);
+    assert.equal(game.S.reg.linewise,false);assert.equal(game.S.cursor.col,col);
+    assert.equal(game.S.mode,"normal");
+  });
+}
+
+test("Remapped 0 deletes the last character when already at the line end",()=>{
+  const game=createGame();game.load("Create a file: :e");
+  game.S.lines=["abc"];game.S.cursor={row:0,col:2};game.play("d0");
+  assert.equal(game.S.lines.join("\n"),"ab");assert.equal(game.S.reg.text,"c");
+});
+
+for(const keys of ["d$","c$"]){
+  test(`Start-boundary operator preserves the register, mode and redo: ${keys}`,()=>{
+    const game=createGame();game.load("Create a file: :e");
+    game.S.lines=["abc"];game.S.cursor={row:0,col:0};game.play("xu");
+    game.S.reg={text:"seed",linewise:false};game.play(keys);
+    assert.equal(game.S.lines.join("\n"),"abc");assert.equal(game.S.reg.text,"seed");
+    assert.equal(game.S.mode,"normal");assert.equal(game.S.redo.length,1);
+    assert.equal(game.S.keyLog.includes(keys),false);
+  });
+}
+
+test("Start-boundary yank matches Neovim's empty yank without changing history",()=>{
+  const game=createGame();game.load("Create a file: :e");
+  game.S.lines=["abc"];game.S.cursor={row:0,col:0};game.play("xu");
+  game.S.reg={text:"seed",linewise:false};game.play("y$");
+  assert.equal(game.S.lines.join("\n"),"abc");assert.equal(game.S.reg.text,"");
+  assert.equal(game.S.mode,"normal");assert.equal(game.S.redo.length,1);
+});
+
+test("Zeros within a count stay numeric and a standalone 0 goes to the line end",()=>{
+  const game=createGame();game.load("Create a file: :e");
+  game.S.lines=Array.from({length:20},(_,i)=>"line "+(i+1));game.S.cursor={row:0,col:0};
+  game.play("10k");assert.equal(game.S.cursor.row,10);assert.equal(game.S.count,"");
+  game.play("0");assert.equal(game.S.cursor.col,"line 11".length-1);
+});
+
+test("Remapped dollar extends a pending count like Neovim's zero key",()=>{
+  const game=createGame();game.load("Create a file: :e");
+  game.S.lines=Array.from({length:25},(_,i)=>"line "+(i+1));game.S.cursor={row:0,col:3};
+  game.play("2$");assert.equal(game.S.count,"20");assert.equal(game.S.cursor.col,3);
+  game.play("k");assert.equal(game.S.cursor.row,20);assert.equal(game.S.count,"");
+});
+
+test("Line-end keys remain literal text in insert and command modes",()=>{
+  const game=createGame();game.load("Create a file: :e");
+  game.play("a$0",ctrlC);assert.equal(game.S.lines.join("\n"),"$0");
+  game.load("Create a file: :e");game.play(":e file$0.txt","Enter");
+  assert.equal(game.S.fileName,"file$0.txt");
+});
 
 test("Creating a named buffer does not save it until :w",()=>{
   const game=createGame();game.load("Create a file: :e");
@@ -164,12 +242,12 @@ test("Move selected text cuts only the closing delimiter and preserves the comme
   game.play("d");
   assert.equal(game.S.reg.text,"*/");assert.equal(game.S.reg.linewise,false);
   assert.equal(game.S.lines.join("\n"),"/* comment text");assert.equal(game.S.won,false);
-  game.play("$p");assert.equal(game.S.lines.join("\n"),"/* comment text*/");assert.equal(game.S.won,true);
+  game.play("0p");assert.equal(game.S.lines.join("\n"),"/* comment text*/");assert.equal(game.S.won,true);
 });
 
 test("Copying or manually rewriting the delimiter does not complete the move lesson",()=>{
   const game=createGame();game.load("Move selected text: v d p");
-  game.play("vñy$p");assert.equal(game.S.won,false);
+  game.play("vñy0p");assert.equal(game.S.won,false);
   game.load("Move selected text: v d p");
   game.play("vñd","A*/",ctrlC);
   assert.equal(game.S.lines.join("\n"),"/* comment text*/");assert.equal(game.S.won,false);

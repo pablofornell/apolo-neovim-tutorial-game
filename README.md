@@ -11,6 +11,12 @@ and pasting, undo/redo, visual selection, moving selected characters, and changi
 a word. Search **move selected text** to practice cutting only a closing `*/`
 and pasting it elsewhere in a comment.
 
+The game follows your movement remaps in `lua/config/keymaps.lua`: j/k/l/ñ for
+left/down/up/right, b/w for forward/backward words, i/a for append/insert, and
+the line-end swap **$ → first column**, **0 → last character**. The $/0 swap
+also applies to visual selections and operators such as `d0`, `d$`, `y0`, and
+`c0`; `^` still goes to the first non-blank character.
+
 File exercises use a simulated workspace that resets with each lesson. They do
 not read or write files on your computer. The status line shows `[+]` for unsaved
 changes and `[closed]` after quitting the practice session.

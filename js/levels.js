@@ -40,14 +40,15 @@ L({title:"Word motions w b e",
   check:()=>curLine().slice(S.cursor.col,S.cursor.col+8)==="fortytwo"}),
 
 L({title:"Line ends: 0 ^ $",
-  goal:"Jump to the LAST character of the line with $",
+  goal:"Jump to the LAST character of the line with 0",
   buf:["    return value + offset   "], cur:{row:0,col:8}, par:1,
-  lesson:`<h2><kbd>0</kbd> <kbd>^</kbd> <kbd>$</kbd></h2><div class="sub">core vim</div>
-  <ul class="keylist"><li><kbd>0</kbd><span class="d">first column</span></li>
+  lesson:`<h2><kbd>$</kbd> <kbd>^</kbd> <kbd>0</kbd></h2><div class="sub">your swap — $ and 0 are flipped</div>
+  <ul class="keylist"><li><kbd>$</kbd><span class="d">first column</span></li>
   <li><kbd>^</kbd><span class="d">first non-blank</span></li>
-  <li><kbd>$</kbd><span class="d">end of line</span></li></ul>
-  <div class="card do"><h3>Goal</h3>Press <kbd>$</kbd> to fly to the end of the line.</div>`,
-  check:()=>S.cursor.col===maxCol() && S.keyLog.includes("$")}),
+  <li><kbd>0</kbd><span class="d">end of line</span></li></ul>
+  <div class="card do"><h3>Goal</h3>Press <kbd>0</kbd> to fly to the last character of the line, including trailing spaces.</div>
+  <p class="why">Your config maps $ → 0 and 0 → $. The swap also works when selecting text or after an operator: d0 deletes to the end, d$ deletes back to the start. ^ still goes to the first non-blank character.</p>`,
+  check:()=>S.cursor.col===maxCol() && S.keyLog.includes("0")}),
 
 L({title:"Top & bottom: gg / G",
   goal:"Go to the last line with G, then back to the top with gg",
@@ -194,7 +195,7 @@ L({title:"Move selected text: v d p",
    <li><kbd>ñ</kbd><span class="d">extend the selection one character right in your config</span></li>
    <li><kbd>d</kbd><span class="d">cut the selected text into the register</span></li>
    <li><kbd>p</kbd> / <kbd>P</kbd><span class="d">paste after / before the cursor in NORMAL mode</span></li></ul>
-  <div class="card do"><h3>Goal</h3>The cursor starts on the closing <code>*</code>. Press <kbd>v</kbd><kbd>ñ</kbd> to select exactly <code>*/</code>, then <kbd>d</kbd> to cut it. Press <kbd>$</kbd> to go to the end of the text, then <kbd>p</kbd> to paste. Finish with <code>/* comment text*/</code>.</div>
+  <div class="card do"><h3>Goal</h3>The cursor starts on the closing <code>*</code>. Press <kbd>v</kbd><kbd>ñ</kbd> to select exactly <code>*/</code>, then <kbd>d</kbd> to cut it. Press <kbd>0</kbd> to go to the end of the text with your new remap, then <kbd>p</kbd> to paste. Finish with <code>/* comment text*/</code>.</div>
   <p class="why">For another destination, move there after cutting, then use p or P. In stock Neovim, l moves right; this game uses your ñ remap. If you are typing in INSERT mode, press Esc before selecting.</p>`,
   check:()=>S.mode==="normal" && S.lines.join("\n")==="/* comment text*/" &&
     S.reg.text==="*/" && !S.reg.linewise && S.keyLog.includes("v") &&

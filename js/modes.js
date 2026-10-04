@@ -38,13 +38,17 @@ function handleNormal(key,e){
         return;
       }
       if(["w","e","$","0","^","b"].includes(key)){
+        // $ maps to an exclusive start motion: deleting/changing at column 0 is a no-op.
+        if(op!=="y" && key==="$" && S.cursor.col===0)return;
         if(op!=="y")snapshot();
         const start={...S.cursor}; motion(key); const end={...S.cursor};
         let lo=start,hi=end; if(end.col<start.col){lo=end;hi=start;}
         const line=S.lines[lo.row];
-        const cut=line.slice(lo.col, key==="$"?undefined:(key==="e"?hi.col+1:hi.col));
-        const rest=line.slice(0,lo.col)+(key==="$"?"":line.slice(key==="e"?hi.col+1:hi.col));
-        if(op==="y"){S.reg={text:cut,linewise:false};S.cursor={...start};}
+        // The remapped 0 reaches the inclusive line end; $ reaches the exclusive start.
+        const stop=hi.col+((key==="0"||key==="e")?1:0);
+        const cut=line.slice(lo.col,stop);
+        const rest=line.slice(0,lo.col)+line.slice(stop);
+        if(op==="y"){S.reg={text:cut,linewise:false};S.cursor={...lo};}
         else{S.reg={text:cut,linewise:false};S.lines[lo.row]=rest;S.cursor={...lo};
           if(op==="c")setMode("insert");}
         clampCursor(); log(op+key); return;
@@ -62,7 +66,9 @@ function handleNormal(key,e){
   }
 
   // numeric count prefix (e.g. 5k jumps 5 lines using the relative numbers).
-  // A leading 0 is the first-column motion; 0 only counts once a count exists.
+  // A standalone 0 is the remapped line-end motion; otherwise it extends a count.
+  // The $ → 0 mapping extends an existing count, just as it does in Neovim.
+  if(key==="$" && S.count)key="0";
   if(/^[0-9]$/.test(key) && !(key==="0" && !S.count)){ S.count+=key; return; }
 
   // jklñ movement remap
