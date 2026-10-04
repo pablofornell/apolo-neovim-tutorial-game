@@ -30,7 +30,7 @@ function handleNormal(key,e){
       if(key==="a"||key==="i"){ S.pending=op+key; return; } // start a text object (af/if)
       // linewise double (dd/yy/cc) or simple motions
       if(key===op){
-        snapshot();
+        if(op!=="y")snapshot();
         if(op==="y"){S.reg={text:curLine(),linewise:true};log("yy");}
         else{ S.reg={text:curLine(),linewise:true};
           S.lines.splice(S.cursor.row,1); if(!S.lines.length)S.lines=[""];
@@ -38,7 +38,8 @@ function handleNormal(key,e){
         return;
       }
       if(["w","e","$","0","^","b"].includes(key)){
-        snapshot(); const start={...S.cursor}; motion(key); const end={...S.cursor};
+        if(op!=="y")snapshot();
+        const start={...S.cursor}; motion(key); const end={...S.cursor};
         let lo=start,hi=end; if(end.col<start.col){lo=end;hi=start;}
         const line=S.lines[lo.row];
         const cut=line.slice(lo.col, key==="$"?undefined:(key==="e"?hi.col+1:hi.col));
@@ -106,7 +107,8 @@ function handleNormal(key,e){
               S.lines.splice(r,2,merged); S.cursor.col=keepCol; clampCursor(); } } log("J"); return; // mzJ`z keeps cursor
     case"p": snapshot(); pasteReg(true); log("p"); return;
     case"P": snapshot(); pasteReg(false); log("P"); return;
-    case"u": if(S.undo.length){const st=S.undo.pop();S.lines=st.lines;S.cursor=st.cursor;clampCursor();} log("u"); return;
+    case"u": if(undoChange())log("u");else toast("Already at oldest change.");return;
+    case"<C-r>": if(redoChange())log("<C-r>");else toast("Nothing to redo.");return;
     case"n": if(doSearch(S.lastSearch,S.searchDir,true)){centerCursor();} log("n"); return;
     case"N": if(doSearch(S.lastSearch,-S.searchDir,true)){centerCursor();} log("N"); return;
     case"/": S.cmd={type:"search",text:""}; setMode("cmd"); return;
@@ -128,7 +130,7 @@ function findFunction(row){
 function execTextObject(op,scope){ // op: d/y/c ; scope: a (outer) | i (inner)
   const f=findFunction(S.cursor.row);
   if(!f){ toast("no @function under the cursor"); return; }
-  snapshot();
+  if(op!=="y")snapshot();
   const r0=scope==="a"?f.os:f.is, r1=scope==="a"?f.oe:f.ie;
   if(r1>=r0){ S.reg={text:S.lines.slice(r0,r1+1).join("\n"),linewise:true}; }
   if(op==="y"){ S.cursor={row:r0,col:0}; }
@@ -312,7 +314,7 @@ function replaceChar(ch){
 function execTextObjectChar(op,scope,kind){
   const span=textObjSpan(kind,scope);
   if(!span){ toast(`no ${scope}${kind} text object here`); return; }
-  snapshot();
+  if(op!=="y")snapshot();
   const l=curLine();
   const empty=span.c1<span.c0;                 // e.g. ci" on an empty "" pair
   S.reg={text:empty?"":l.slice(span.c0,span.c1+1),linewise:false};
@@ -327,6 +329,7 @@ function execTextObjectChar(op,scope,kind){
 
 /* ---------- ex command line ( : ) ---------- */
 function runEx(cmd){
+  if(runFileEx(cmd))return;
   const parts=cmd.split(/\s+/), c=parts[0], arg=parts[1];
   if(/^(vs|vsp|vsplit)$/.test(c)){ S.split={type:"v",count:2,active:0}; log(":vsplit"); toast(":vsplit → window split (vertical)"); }
   else if(/^(sp|split)$/.test(c)){ S.split={type:"h",count:2,active:0}; log(":split"); toast(":split → window split (horizontal)"); }
@@ -338,18 +341,18 @@ function runEx(cmd){
   else if(/^(ls|buffers|files)$/.test(c)){ openBufList(); log(":ls"); }
   else if(/^(tabnew|tabe|tabedit)$/.test(c)){ newTab(); log(":tabnew"); }
   else if(/^(tabc|tabclose)$/.test(c)){ closeTab(); log(":tabclose"); }
-  else if(/^(q|quit|clo|close)$/.test(c)){
+  else if(/^(clo|close)$/.test(c)){
     if(S.split){ S.split=null; log(":q"); toast(":q → closed the window"); }
     else if(S.tabs&&S.tabs.length>1){ closeTab(); log(":q"); }
     else toast(":q → last window (stay in the lesson)"); }
-  else if(/^(w|write|wq|x)$/.test(c)){ toast(":"+c+" → file written"); log(":w"); }
   else if(/^(so|source)/.test(c)){ toast(":so → re-sourced config"); log(":so"); }
   else if(c!==""){ toast(":"+cmd+"  — not wired in this lesson"); log(":"+c); }
 }
 
 /* ---------- buffers ---------- */
-function syncBuf(){ if(S.buffers) S.buffers[S.bufIdx].lines=S.lines.slice(); }
-function loadBuf(){ S.lines=S.buffers[S.bufIdx].lines.slice(); S.cursor={row:0,col:0}; clampCursor(); }
+function syncBuf(){ if(S.buffers){const b=S.buffers[S.bufIdx];b.lines=S.lines.slice();b.undo=S.undo;b.redo=S.redo;} }
+function loadBuf(){ const b=S.buffers[S.bufIdx];S.lines=b.lines.slice();S.fileName=b.name;
+  S.undo=b.undo||[];S.redo=b.redo||[];S.cursor={row:0,col:0};clampCursor(); }
 function switchBuf(dir){ if(!S.buffers){ toast(":b… → only ~/init.lua is open"); return; }
   syncBuf(); S.bufIdx=(S.bufIdx+dir+S.buffers.length)%S.buffers.length; loadBuf();
   toast(":b"+(S.bufIdx+1)+" → "+S.buffers[S.bufIdx].name); }

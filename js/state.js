@@ -10,13 +10,16 @@ const S = {
   reg:{text:"",linewise:false}, sysclip:"",
   pending:"", awaitLeader:false, leaderBuf:"", count:"",
   cmd:null, lastSearch:"", searchDir:1,
-  undo:[], keyLog:[], keys:0, enteredInsert:false,
+  undo:[], redo:[], keyLog:[], keys:0, enteredInsert:false,
   popOpen:false, popKind:null, won:false, cmp:null,
   // motions & edits: pending find (f/t), last find for ; and ,, pending r, last
   // change for the dot command
   findPending:null, lastFind:null, replacePending:false, dot:null,
   // window/buffer/tab system
   winPending:false, split:null, buffers:null, bufIdx:0, tabs:null, tabIdx:0,
+  // Each lesson has its own in-memory filesystem; no real files are changed.
+  fileName:"init.lua", files:new Map(), dirs:new Set(), cwd:"", closed:false,
+  discardedChanges:false, popSelection:0, popRows:[], filePrompt:null,
   // set of modes the player has visited this level (for the modes lesson)
   modesSeen:new Set(),
 };
@@ -29,7 +32,20 @@ const maxCol=()=>{ const l=curLine().length; return S.mode==="insert"?l:Math.max
 function clampCursor(){ S.cursor.row=clamp(S.cursor.row,0,S.lines.length-1);
   S.cursor.col=clamp(S.cursor.col,0,maxCol()); }
 function snapshot(){ S.undo.push({lines:S.lines.slice(),cursor:{...S.cursor}});
+  S.redo=[];
   if(S.undo.length>200)S.undo.shift(); }
+function undoChange(){
+  if(!S.undo.length)return false;
+  S.redo.push({lines:S.lines.slice(),cursor:{...S.cursor}});
+  const st=S.undo.pop(); S.lines=st.lines;S.cursor=st.cursor;clampCursor();
+  return true;
+}
+function redoChange(){
+  if(!S.redo.length)return false;
+  S.undo.push({lines:S.lines.slice(),cursor:{...S.cursor}});
+  const st=S.redo.pop(); S.lines=st.lines;S.cursor=st.cursor;clampCursor();
+  return true;
+}
 function log(k){ S.keyLog.push(k); }
 
 /* word tokenisation for w/b/e */

@@ -4,6 +4,17 @@
 from ThePrimeagen's `init.lua`. Pure vanilla HTML/CSS/JS, no build step, no
 dependencies.
 
+Search the sidebar for a task such as **create a file**, **save and quit**, or
+**copy a line**. The **Everyday basics** games cover creating and opening files,
+saving or discarding edits, creating folders, adding and deleting lines, copying
+and pasting, undo/redo, visual selection, moving selected characters, and changing
+a word. Search **move selected text** to practice cutting only a closing `*/`
+and pasting it elsewhere in a comment.
+
+File exercises use a simulated workspace that resets with each lesson. They do
+not read or write files on your computer. The status line shows `[+]` for unsaved
+changes and `[closed]` after quitting the practice session.
+
 ## How to launch
 
 ### Option 1 — just open the file
@@ -36,8 +47,17 @@ js/
   motions.js      motions, search, visual-range selection
   popups.js       telescope/netrw/harpoon overlays
   modes.js        normal/visual/insert/command handlers, leader maps
+  files.js        simulated files, saving/quitting, interactive netrw
   render.js       buffer rendering, toast/shake
   input.js        key dispatch
   levels.js       the lesson curriculum
   game.js         level loading, win check, sidebar, bootstrap
+```
+
+## Verification
+
+Run the regression tests with Node.js (no package installation needed):
+
+```sh
+node --test tests/game.test.js
 ```

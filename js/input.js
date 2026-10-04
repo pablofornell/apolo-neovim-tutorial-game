@@ -3,19 +3,23 @@ function keyName(e){
   const k=e.key;
   if(e.ctrlKey){
     const m={"d":"<C-d>","u":"<C-u>","p":"<C-p>","n":"<C-n>","y":"<C-y>","c":"<C-c>",
-             "k":"<C-k>","j":"<C-j>","f":"<C-f>","e":"<C-e>","w":"<C-w>"," ":"<C-Space>"};
+             "k":"<C-k>","j":"<C-j>","f":"<C-f>","e":"<C-e>","w":"<C-w>","r":"<C-r>"," ":"<C-Space>"};
     if(m[k.toLowerCase()])return m[k.toLowerCase()];
   }
   return k;
 }
 function onKey(e){
+  // Search and sidebar controls use normal browser typing and navigation.
+  if(e.target.closest('input, textarea, select, [contenteditable], #side')) return;
   if(S.won && e.key!=="Enter") return;
+  if(S.closed)return;
   if(["Control","Shift","Alt","Meta","CapsLock"].includes(e.key)) return; // ignore bare modifier presses
   const kn=keyName(e);
 
   // popups: in the harpoon menu, 1-4 jumps to that file; esc/C-c/q/Enter just close
   if(S.popOpen){
     e.preventDefault();
+    if(S.popKind==="netrw"){S.keys++;handleNetrwKey(kn);afterKey();return;}
     if(S.popKind==="harpoon" && /^[1-4]$/.test(kn)){
       closePop(); log("<leader>"+kn); toast("→ harpoon file "+kn+"  (<leader>"+kn+")"); afterKey(); return;
     }

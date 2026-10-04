@@ -47,7 +47,7 @@ function renderBufHTML(){
 function render(){
   if(S.modesSeen) S.modesSeen.add(S.mode);
   const buf=document.getElementById("buf");
-  const rows=renderBufHTML();
+  const rows=S.closed?'<div class="poprow">Practice session closed. Reset or choose another game.</div>':renderBufHTML();
   let tab="";
   if(S.tabs&&S.tabs.length>1){
     tab=`<div class="tabline">`+S.tabs.map((t,i)=>
@@ -65,7 +65,8 @@ function render(){
   const map={normal:["NORMAL","normal"],insert:["INSERT","insert"],visual:["VISUAL","visual"],vline:["V-LINE","vline"],cmd:["COMMAND","cmd"]};
   const[label,cls]=map[S.mode]; mb.textContent=label; mb.className="mode "+cls;
   document.getElementById("stPos").textContent=(S.cursor.row+1)+":"+(S.cursor.col+1);
-  document.getElementById("stFile").textContent = S.buffers? ("~/"+S.buffers[S.bufIdx].name) : "~/init.lua";
+  document.getElementById("stFile").textContent = (S.fileName==="[No Name]"?S.fileName:"~/"+S.fileName)
+    +(S.closed?" [closed]":fileModified()?" [+]":"");
   const cl=document.getElementById("cmdline");
   cl.textContent = S.cmd? (S.cmd.type==="search"?"/"+S.cmd.text
     : S.cmd.type==="ex"?":"+S.cmd.text

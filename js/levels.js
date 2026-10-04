@@ -82,6 +82,132 @@ L({title:"Count lines: 5k / 3l",
   <p class="why">Reading the relative number and prefixing it onto <kbd>k</kbd>/<kbd>l</kbd> is the fastest way to cross a function — far quicker than counting by eye or holding a key.</p>`,
   check:()=>S.cursor.row===8 && S.keyLog.some(k=>/^[1-9]\d*[jk]$/.test(k))}),
 
+{group:"Everyday basics"},
+L({title:"Create a file: :e",
+  goal:"Create notes.txt, type hello, then save it with :w",
+  fileName:"[No Name]", files:{}, buf:[""], cur:{row:0,col:0},
+  lesson:`<h2>Create a file with <kbd>:e</kbd></h2><div class="sub">everyday basics · edit and write</div>
+  <p><code>:e</code> opens a filename. If it does not exist yet, you get an empty buffer; <code>:w</code> writes it to disk.</p>
+  <div class="card do"><h3>Goal</h3>Type <kbd>:</kbd><code>e notes.txt</code><kbd>Enter</kbd>, press <kbd>a</kbd> to insert before the cursor, type <code>hello</code>, press <kbd>Ctrl</kbd>+<kbd>c</kbd>, then type <kbd>:</kbd><code>w</code><kbd>Enter</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.fileName==="notes.txt" && S.lines.join("\n")==="hello" &&
+    S.files.get("notes.txt")?.join("\n")==="hello" &&
+    S.keyLog.includes(":e notes.txt") && S.keyLog.includes(":w")}),
+
+L({title:"Open a file: :e",
+  goal:"Open the existing todo.txt file with :e",
+  fileName:"[No Name]", files:{"todo.txt":["buy milk","call Alex"]}, buf:[""], cur:{row:0,col:0},
+  lesson:`<h2>Open a file with <kbd>:e</kbd></h2><div class="sub">everyday basics · edit a file</div>
+  <p><code>:e filename</code> loads an existing file into the editor.</p>
+  <div class="card do"><h3>Goal</h3>Type <kbd>:</kbd><code>e todo.txt</code><kbd>Enter</kbd>. Read the two tasks that appear.</div>`,
+  check:()=>S.mode==="normal" && S.fileName==="todo.txt" &&
+    S.lines.join("\n")==="buy milk\ncall Alex" && S.keyLog.includes(":e todo.txt")}),
+
+L({title:"Save a file: :w",
+  goal:"Change draft to ready in status.txt, then save with :w",
+  fileName:"status.txt", files:{"status.txt":["draft"]}, buf:["draft"], cur:{row:0,col:0},
+  lesson:`<h2>Save with <kbd>:w</kbd></h2><div class="sub">everyday basics · write</div>
+  <p>Editing changes the buffer. <code>:w</code> writes those changes to the saved file.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>c</kbd><kbd>i</kbd><kbd>w</kbd>, type <code>ready</code>, press <kbd>Ctrl</kbd>+<kbd>c</kbd>, then type <kbd>:</kbd><code>w</code><kbd>Enter</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.fileName==="status.txt" && S.lines.join("\n")==="ready" &&
+    S.files.get("status.txt")?.join("\n")==="ready" && S.keyLog.includes("ciw") && S.keyLog.includes(":w")}),
+
+L({title:"Save and quit: :wq",
+  goal:"Append ! to hello, then save and quit with :wq",
+  fileName:"message.txt", files:{"message.txt":["hello"]}, buf:["hello"], cur:{row:0,col:0},
+  lesson:`<h2>Save and quit with <kbd>:wq</kbd></h2><div class="sub">everyday basics · write and exit</div>
+  <p><code>:wq</code> writes the current buffer and closes the editor.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>A</kbd>, type <code>!</code>, press <kbd>Ctrl</kbd>+<kbd>c</kbd>, then type <kbd>:</kbd><code>wq</code><kbd>Enter</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.closed===true && S.fileName==="message.txt" &&
+    S.lines.join("\n")==="hello!" && S.files.get("message.txt")?.join("\n")==="hello!" &&
+    S.keyLog.includes("A") && S.keyLog.includes(":wq") && S.keyLog.includes(":w")}),
+
+L({title:"Quit without saving: :q!",
+  goal:"Append !, then quit without saving to discard it",
+  fileName:"message.txt", files:{"message.txt":["hello"]}, buf:["hello"], cur:{row:0,col:0},
+  lesson:`<h2>Discard edits with <kbd>:q!</kbd></h2><div class="sub">everyday basics · exit without writing</div>
+  <p><code>:q!</code> closes the editor and throws away unsaved changes.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>A</kbd>, type <code>!</code>, press <kbd>Ctrl</kbd>+<kbd>c</kbd>, then type <kbd>:</kbd><code>q!</code><kbd>Enter</kbd>. The saved file should still say <code>hello</code>.</div>`,
+  check:()=>S.mode==="normal" && S.closed===true && S.discardedChanges===true &&
+    S.fileName==="message.txt" && S.lines.join("\n")==="hello" &&
+    S.files.get("message.txt")?.join("\n")==="hello" &&
+    S.keyLog.includes("A") && S.keyLog.includes(":q!")}),
+
+L({title:"Create a folder: netrw d",
+  goal:"Open netrw and create the notes folder (directory) with d",
+  buf:["-- project files"], cur:{row:0,col:0}, dirs:[],
+  lesson:`<h2>Create a folder in netrw</h2><div class="sub">everyday basics · directory</div>
+  <p><kbd>Space</kbd><kbd>p</kbd><kbd>v</kbd> opens the file explorer. Inside netrw, <kbd>d</kbd> creates a directory.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>Space</kbd><kbd>p</kbd><kbd>v</kbd>, then <kbd>d</kbd>, type <code>notes</code>, and press <kbd>Enter</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.dirs.has("notes") &&
+    S.keyLog.includes("<leader>pv") && S.keyLog.includes("netrw d notes")}),
+
+L({title:"Add a new line: o",
+  goal:"Add middle between first and last with o",
+  buf:["first","last"], cur:{row:0,col:0},
+  lesson:`<h2>Open a line with <kbd>o</kbd></h2><div class="sub">everyday basics · insert</div>
+  <p><kbd>o</kbd> opens a blank line below the cursor and enters INSERT mode.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>o</kbd>, type <code>middle</code>, then press <kbd>Ctrl</kbd>+<kbd>c</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.lines.join("\n")==="first\nmiddle\nlast" && S.keyLog.includes("o")}),
+
+L({title:"Delete a line: dd",
+  goal:"Remove the entire 'remove me' line with dd",
+  buf:["keep first","remove me","keep last"], cur:{row:1,col:0},
+  lesson:`<h2>Delete a line with <kbd>dd</kbd></h2><div class="sub">everyday basics · normal mode</div>
+  <p><kbd>d</kbd><kbd>d</kbd> deletes the whole current line.</p>
+  <div class="card do"><h3>Goal</h3>The cursor is on <code>remove me</code>. Press <kbd>d</kbd><kbd>d</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.lines.join("\n")==="keep first\nkeep last" && S.keyLog.includes("dd")}),
+
+L({title:"Copy and paste a line: yy p",
+  goal:"Copy the 'copy me' line with yy, then paste it with p",
+  buf:["copy me"], cur:{row:0,col:0},
+  lesson:`<h2>Copy and paste a line</h2><div class="sub">everyday basics · yank and put</div>
+  <p><kbd>y</kbd><kbd>y</kbd> copies the current line. <kbd>p</kbd> pastes it below.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>y</kbd><kbd>y</kbd>, then <kbd>p</kbd>. You should see two copies of <code>copy me</code>.</div>`,
+  check:()=>S.mode==="normal" && S.lines.join("\n")==="copy me\ncopy me" &&
+    S.keyLog.includes("yy") && S.keyLog.includes("p")}),
+
+L({title:"Undo and redo: u / Ctrl-r",
+  goal:"Delete 'remove me', undo it, then redo the deletion",
+  buf:["keep first","remove me","keep last"], cur:{row:1,col:0},
+  lesson:`<h2>Undo and redo</h2><div class="sub">everyday basics · recover an edit</div>
+  <p><kbd>u</kbd> undoes your last change. <kbd>Ctrl</kbd>+<kbd>r</kbd> redoes an undone change.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>d</kbd><kbd>d</kbd>, then <kbd>u</kbd> to bring the line back, then <kbd>Ctrl</kbd>+<kbd>r</kbd> to remove it again.</div>`,
+  check:()=>S.mode==="normal" && S.lines.join("\n")==="keep first\nkeep last" &&
+    S.keyLog.includes("dd") && S.keyLog.includes("u") && S.keyLog.includes("<C-r>")}),
+
+L({title:"Select a line: V",
+  goal:"Select 'select me' with V, copy it with y, then paste with p",
+  buf:["select me"], cur:{row:0,col:0},
+  lesson:`<h2>Select a whole line with <kbd>V</kbd></h2><div class="sub">everyday basics · visual line mode</div>
+  <p><kbd>V</kbd> selects the current line. <kbd>y</kbd> copies it, and <kbd>p</kbd> pastes a copy below.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>V</kbd>, then <kbd>y</kbd>, then <kbd>p</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.lines.join("\n")==="select me\nselect me" &&
+    S.keyLog.includes("V") && S.keyLog.includes("y") && S.keyLog.includes("p")}),
+
+L({title:"Move selected text: v d p",
+  goal:"Select only the closing */ and move it after comment text",
+  buf:["/* */comment text"], cur:{row:0,col:3},
+  lesson:`<h2>Move selected characters</h2><div class="sub">everyday basics · visual selection, cut and paste</div>
+  <p>When a comment pair <code>/* */</code> is already present, you can move the closing <code>*/</code> anywhere without moving the rest of the line.</p>
+  <ul class="keylist">
+   <li><kbd>v</kbd><span class="d">start selecting individual characters</span></li>
+   <li><kbd>ñ</kbd><span class="d">extend the selection one character right in your config</span></li>
+   <li><kbd>d</kbd><span class="d">cut the selected text into the register</span></li>
+   <li><kbd>p</kbd> / <kbd>P</kbd><span class="d">paste after / before the cursor in NORMAL mode</span></li></ul>
+  <div class="card do"><h3>Goal</h3>The cursor starts on the closing <code>*</code>. Press <kbd>v</kbd><kbd>ñ</kbd> to select exactly <code>*/</code>, then <kbd>d</kbd> to cut it. Press <kbd>$</kbd> to go to the end of the text, then <kbd>p</kbd> to paste. Finish with <code>/* comment text*/</code>.</div>
+  <p class="why">For another destination, move there after cutting, then use p or P. In stock Neovim, l moves right; this game uses your ñ remap. If you are typing in INSERT mode, press Esc before selecting.</p>`,
+  check:()=>S.mode==="normal" && S.lines.join("\n")==="/* comment text*/" &&
+    S.reg.text==="*/" && !S.reg.linewise && S.keyLog.includes("v") &&
+    S.keyLog.includes("d") && (S.keyLog.includes("p") || S.keyLog.includes("P"))}),
+
+L({title:"Change a word: ciw",
+  goal:"Change hello world into goodbye world with ciw",
+  buf:["hello world"], cur:{row:0,col:0},
+  lesson:`<h2>Change a word with <kbd>ciw</kbd></h2><div class="sub">everyday basics · text object</div>
+  <p><kbd>c</kbd><kbd>i</kbd><kbd>w</kbd> removes the word under the cursor and enters INSERT mode.</p>
+  <div class="card do"><h3>Goal</h3>The cursor is on <code>hello</code>. Press <kbd>c</kbd><kbd>i</kbd><kbd>w</kbd>, type <code>goodbye</code>, then press <kbd>Ctrl</kbd>+<kbd>c</kbd>.</div>`,
+  check:()=>S.mode==="normal" && S.lines.join("\n")==="goodbye world" && S.keyLog.includes("ciw")}),
+
 {group:"Core motions & edits"},
 L({title:"Find a char: f / t",
   goal:"Jump straight onto the ( with f(",

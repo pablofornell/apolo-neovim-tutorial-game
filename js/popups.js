@@ -25,5 +25,6 @@ function openPop(kind){
     `<div class="poprow${i===(kind==='netrw'?3:0)?' sel':''}">${esc(r)}</div>`).join("");
   document.getElementById("pop").classList.add("show");
   S.popOpen=true; S.popKind=kind;
+  if(kind==="netrw"){S.popSelection=0;S.filePrompt=null;renderNetrw();}
 }
-function closePop(){ document.getElementById("pop").classList.remove("show"); S.popOpen=false; S.popKind=null; }
+function closePop(){ document.getElementById("pop").classList.remove("show"); S.popOpen=false; S.popKind=null;S.filePrompt=null; }
