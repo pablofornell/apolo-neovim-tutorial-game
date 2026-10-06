@@ -10,11 +10,9 @@ function keyName(e){
 }
 function onKey(e){
   if(e.isComposing)return;
-  // Match the character so Shift+7 works on Spanish keyboards too.
+  // Ctrl+/ opens game search; match the character for Spanish Ctrl+Shift+7.
   const typing=e.target.closest('input, textarea, select, [contenteditable]');
-  const editorTyping=!S.won && !S.closed &&
-    (S.mode==="insert" || S.mode==="cmd" || S.filePrompt || S.findPending || S.replacePending);
-  if(e.key==="/" && !e.ctrlKey && !e.altKey && !e.metaKey && !typing && !editorTyping){
+  if(e.key==="/" && e.ctrlKey && !e.altKey && !e.metaKey && !typing){
     e.preventDefault();
     const search=document.getElementById("gameSearch");
     search.focus();search.select();

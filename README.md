@@ -4,10 +4,10 @@
 from ThePrimeagen's `init.lua`. Pure vanilla HTML/CSS/JS, no build step, no
 dependencies.
 
-Press **/** (Shift+7 on a Spanish keyboard) to focus game search, type a query,
+Press **Ctrl+/** (Ctrl+Shift+7 on a Spanish keyboard) to focus game search, type a query,
 then press **Enter** to open the first matching game. The shortcut selects any
-existing query so you can replace it. While entering text in the editor, `/`
-remains text; use **Alt+/** in normal mode to practice Neovim's buffer search.
+existing query so you can replace it and works in every editor mode. **/** keeps
+its Neovim behavior: buffer search in normal mode and literal text while typing.
 
 Search the sidebar for a task such as **create a file**, **save and quit**, or
 **copy a line**. The **Everyday basics** games cover creating and opening files,

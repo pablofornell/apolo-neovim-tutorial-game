@@ -329,14 +329,14 @@ L({title:"Centered scrolling",
   check:()=>S.keyLog.includes("<C-d>") && S.cursor.row>=8}),
 
 L({title:"Centered search: n / N",
-  goal:"Search 'TODO' with Alt / then jump matches with n",
+  goal:"Search 'TODO' with / then jump matches with n",
   buf:["fn a(){}","// TODO: refactor a","fn b(){}","fn c(){}","// TODO: write tests","fn d(){}","// TODO: ship it"],
   cur:{row:0,col:0}, par:null,
   lesson:`<h2>Search, then <kbd>n</kbd> / <kbd>N</kbd></h2><div class="sub">remap.lua</div>
-  <p>In Neovim, <kbd>/</kbd> searches the buffer. This game uses <kbd>/</kbd> to focus game search, so press <kbd>Alt</kbd>+<kbd>/</kbd> here, type a pattern, then <kbd>Enter</kbd>. <kbd>n</kbd> repeats forward and <kbd>N</kbd> backward.</p>
+  <p>Press <kbd>/</kbd>, type a pattern, <kbd>Enter</kbd>. Then <kbd>n</kbd> repeats forward, <kbd>N</kbd> backward.</p>
   <div class="card"><code>n → nzzzv</code> &nbsp; <code>N → Nzzzv</code>
   <div class="why">Again the trailing <code>zz</code>: every match lands dead-center. <code>zv</code> opens folds.</div></div>
-  <div class="card do"><h3>Goal</h3>Press <kbd>Alt</kbd>+<kbd>/</kbd>, type <code>TODO</code>, press <kbd>Enter</kbd>, then press <kbd>n</kbd> to reach a later TODO.</div>`,
+  <div class="card do"><h3>Goal</h3>Type <kbd>/</kbd><code>TODO</code><kbd>Enter</kbd>, then press <kbd>n</kbd> to reach a later TODO.</div>`,
   check:()=>S.keyLog.includes("n") && curLine().includes("TODO") && S.cursor.row>=4}),
 
 L({title:"Join lines with J",

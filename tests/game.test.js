@@ -406,22 +406,34 @@ test("Reset clears the completion menu and its actions across lessons",()=>{
   assert.equal(game.document.getElementById("cmp").style.display,"none");assert.equal(game.S.won,false);
 });
 
-test("Slash from Shift+7 focuses game search and selects the existing query without playing a move",()=>{
+test("Ctrl-slash from Ctrl-Shift-7 focuses game search and selects the existing query without playing a move",()=>{
   const game=createGame();game.load("Create a file: :e");
   const search=game.document.getElementById("gameSearch");search.value="autocomplete";
   let prevented=false;
-  game.onKey({key:"/",code:"Digit7",shiftKey:true,target:game.document.getElementById("buf"),preventDefault(){prevented=true;}});
+  game.onKey({key:"/",code:"Digit7",ctrlKey:true,shiftKey:true,target:game.document.getElementById("buf"),preventDefault(){prevented=true;}});
   assert.equal(game.document.activeElement,search);assert.equal(search.selected,true);
   assert.equal(prevented,true);assert.equal(game.S.mode,"normal");assert.equal(game.S.keys,0);
   assert.equal(game.S.lines[0],"");
 });
 
-test("Slash focuses search after winning or closing the editor, including from Insert mode",()=>{
+test("Ctrl-slash focuses search after winning or closing the editor, including from Insert mode",()=>{
   const game=createGame();
   for(const state of [{won:true,mode:"insert"},{closed:true}]){
-    game.load("Create a file: :e");Object.assign(game.S,state);game.play("/");
+    game.load("Create a file: :e");Object.assign(game.S,state);game.play({ctrl:"/"});
     assert.equal(game.document.activeElement,game.document.getElementById("gameSearch"));
     assert.equal(game.S.keys,0);
+  }
+});
+
+test("Ctrl-slash focuses game search from Insert mode, command mode and open menus without editing",()=>{
+  const game=createGame();
+  for(const steps of [["a"],[":e "],[" pv"]]){
+    game.load("Create a file: :e");game.play(...steps);
+    const mode=game.S.mode,command=game.S.cmd?.text,keys=game.S.keys;
+    game.play({ctrl:"/"});
+    assert.equal(game.document.activeElement,game.document.getElementById("gameSearch"));
+    assert.equal(game.S.mode,mode);assert.equal(game.S.cmd?.text,command);
+    assert.equal(game.S.keys,keys);assert.equal(game.S.lines[0],"");
   }
 });
 
@@ -447,9 +459,9 @@ test("Slash does not hijack text fields or an IME composition",()=>{
   assert.equal(game.S.mode,"normal");assert.equal(game.S.keys,0);
 });
 
-test("Alt-slash keeps the Neovim buffer search lesson playable",()=>{
+test("Plain slash keeps the Neovim buffer search lesson playable",()=>{
   const game=createGame();game.load("Centered search: n / N");
-  game.onKey({key:"/",altKey:true,target:game.document.getElementById("buf"),preventDefault(){}});
+  game.play("/");
   assert.equal(game.S.mode,"cmd");assert.equal(game.S.cmd.type,"search");
   game.play("TODO","Enter","n");assert.equal(game.S.won,true);
   assert.equal(game.S.cursor.row,4);
