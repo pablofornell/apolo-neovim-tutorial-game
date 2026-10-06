@@ -9,6 +9,17 @@ function keyName(e){
   return k;
 }
 function onKey(e){
+  if(e.isComposing)return;
+  // Match the character so Shift+7 works on Spanish keyboards too.
+  const typing=e.target.closest('input, textarea, select, [contenteditable]');
+  const editorTyping=!S.won && !S.closed &&
+    (S.mode==="insert" || S.mode==="cmd" || S.filePrompt || S.findPending || S.replacePending);
+  if(e.key==="/" && !e.ctrlKey && !e.altKey && !e.metaKey && !typing && !editorTyping){
+    e.preventDefault();
+    const search=document.getElementById("gameSearch");
+    search.focus();search.select();
+    return;
+  }
   // Search and sidebar controls use normal browser typing and navigation.
   if(e.target.closest('input, textarea, select, [contenteditable], #side')) return;
   if(S.won && e.key!=="Enter") return;
