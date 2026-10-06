@@ -142,11 +142,14 @@ kbd{background:#00171d;border:1px solid var(--line);border-bottom-width:2px;bord
 .poprow.sel{background:var(--hl);color:var(--txt);border-left:2px solid var(--foam)}
 /* nvim-cmp completion menu */
 .cmp{position:absolute;display:none;z-index:30;background:var(--ov);border:1px solid var(--iris);
-     border-radius:7px;min-width:210px;max-height:180px;overflow:auto;box-shadow:0 14px 34px -10px #000;font-size:12.5px}
+     border-radius:7px;min-width:min(210px,calc(100% - 16px));max-width:calc(100% - 16px);max-height:240px;overflow:auto;box-shadow:0 14px 34px -10px #000;font-size:12.5px}
 .cmprow{padding:3px 12px 3px 10px;color:var(--sub);display:flex;gap:9px;align-items:center;white-space:nowrap}
 .cmprow.sel{background:var(--hl);color:var(--txt)}
 .cmprow .ic{width:7px;height:7px;border-radius:2px;background:var(--foam);flex:none}
 .cmprow .kind{margin-left:auto;color:var(--muted);font-size:10.5px}
+.cmpfoot{display:flex;flex-wrap:wrap;gap:5px 12px;padding:7px 10px;border-top:1px solid var(--line);color:var(--sub);font-size:10px}
+.cmpfoot span{white-space:nowrap}
+.cmpfoot kbd{padding:0 3px;font-size:10px}
 .popfoot{padding:7px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}

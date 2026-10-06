@@ -11,6 +11,13 @@ and pasting, undo/redo, visual selection, moving selected characters, and changi
 a word. Search **move selected text** to practice cutting only a closing `*/`
 and pasting it elsewhere in a comment.
 
+Search the sidebar for **autocomplete**, **suggestions**, or **menu** to practice
+the suggestion popup. In **Autocomplete: accept a suggestion**, press `A`, type
+`targ`, then press `Ctrl-y` to accept `target`. The next games teach `Ctrl-Space`
+to open suggestions, `Ctrl-n` and `Ctrl-p` to move through them, and `Ctrl-e`
+to dismiss the popup while staying in insert mode. `Esc` or `Ctrl-c` leaves
+insert mode.
+
 The game follows your movement remaps in `lua/config/keymaps.lua`: j/k/l/ñ for
 left/down/up/right, b/w for forward/backward words, i/a for append/insert, and
 the line-end swap **$ → first column**, **0 → last character**. The $/0 swap

@@ -10,7 +10,7 @@ function loadLevel(i){
   S.lines=lv.buf.slice(); S.cursor={...lv.cur}; S.mode="normal"; S.anchor=null;
   S.reg=lv.preReg?{...lv.preReg}:{text:"",linewise:false};
   S.sysclip=""; S.pending="";S.awaitLeader=false;S.leaderBuf="";S.count="";S.cmd=null;
-  S.lastSearch="";S.undo=[];S.redo=[];S.keyLog=[];S.keys=0;S.enteredInsert=false;S.won=false;S.cmp=null;
+  S.lastSearch="";S.undo=[];S.redo=[];S.keyLog=[];S.keys=0;S.enteredInsert=false;S.won=false;S.cmp=null;S.cmpActions=[];
   S.findPending=null;S.lastFind=null;S.replacePending=false;S.dot=null;
   S.winPending=false;S.split=null;S.tabs=null;S.tabIdx=0;S.modesSeen=new Set();
   if(lv.buffers){ S.buffers=lv.buffers.map(b=>({name:b.name,lines:b.lines.slice()}));

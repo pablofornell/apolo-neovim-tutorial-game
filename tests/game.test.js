@@ -63,6 +63,10 @@ const solutions=[
   ["Select a line: V",["Vyp"]],
   ["Move selected text: v d p",["vñd0p"]],
   ["Change a word: ciw",["ciwgoodbye",ctrlC]],
+  ["LSP completion (cmp)",["A",{ctrl:" "},{ctrl:"n"},{ctrl:"y"}]],
+  ["Autocomplete: accept a suggestion",["Atarg",{ctrl:"y"}]],
+  ["Autocomplete: next / previous suggestion",["A",{ctrl:" "},{ctrl:"n"},{ctrl:"n"},{ctrl:"p"},{ctrl:"y"}]],
+  ["Autocomplete: dismiss suggestions",["A",{ctrl:" "},{ctrl:"e"},"et"]],
 ];
 
 for(const [title,steps] of solutions){
@@ -282,8 +286,121 @@ test("File creation and other basic tasks are in the search index",()=>{
     [["copy","paste"],"Copy and paste a line: yy p"],[["undo","redo"],"Undo and redo: u / Ctrl-r"],
     [["move","selected","text"],"Move selected text: v d p"],
     [["comment","*/"],"Move selected text: v d p"],
+    [["autocomplete","accept"],"Autocomplete: accept a suggestion"],
+    [["sugestion","menu"],"Autocomplete: accept a suggestion"],
+    [["target"],"Autocomplete: accept a suggestion"],
+    [["previous","suggestion"],"Autocomplete: next / previous suggestion"],
+    [["dismiss","suggestions"],"Autocomplete: dismiss suggestions"],
   ]){
     const found=game.SEARCH_INDEX.filter(entry=>game.searchMatches(entry,terms)).map(entry=>game.PLAYABLE[entry.i].title);
     assert.ok(found.includes(title),`Search ${terms.join(" ")} finds ${title}`);
   }
+});
+
+test("Typing targ opens suggestions; selection does not edit until Ctrl-y",()=>{
+  const game=createGame();game.load("Autocomplete: accept a suggestion");
+  game.play("Atarg");
+  assert.equal(game.S.lines[0],"local result = targ");assert.equal(game.S.won,false);
+  assert.equal(game.S.cmp.open,true);assert.equal(game.S.cmp.prefix,"targ");
+  assert.deepEqual(Array.from(game.S.cmp.items),["target","targetCount","targetName"]);
+  const menu=game.document.getElementById("cmp");
+  assert.equal(menu.style.display,"block");assert.match(menu.innerHTML,/Ctrl y.*accept/);
+  game.play({ctrl:"n"});
+  assert.equal(game.S.lines[0],"local result = targ");assert.equal(game.S.cmp.sel,1);
+  game.play({ctrl:"p"},{ctrl:"y"});
+  assert.equal(game.S.lines[0],"local result = target");assert.equal(game.S.won,true);
+  assert.equal(menu.style.display,"none");assert.equal(game.S.mode,"insert");
+});
+
+test("Typing the full word or accepting another suggestion cannot win the acceptance lesson",()=>{
+  const game=createGame();game.load("Autocomplete: accept a suggestion");
+  game.play("Atarget",{ctrl:"y"});assert.equal(game.S.won,false);
+  assert.equal(game.S.lines[0],"local result = targetCount");
+  game.load("Autocomplete: accept a suggestion");game.play("Atarget");
+  assert.equal(game.S.lines[0],"local result = target");assert.equal(game.S.won,false);
+  game.load("Autocomplete: accept a suggestion");game.play("Atarg",{ctrl:"n"},{ctrl:"y"});
+  assert.equal(game.S.lines[0],"local result = targetCount");assert.equal(game.S.won,false);
+});
+
+test("Suggestions refresh after typing and backspacing, without accepting stale matches",()=>{
+  const game=createGame();game.load("Autocomplete: accept a suggestion");
+  game.play("AtargetN");assert.deepEqual(Array.from(game.S.cmp.items),["targetName"]);
+  game.play("Backspace");assert.equal(game.S.cmp.prefix,"target");
+  assert.deepEqual(Array.from(game.S.cmp.items),["targetCount","targetName"]);
+  game.play("Backspace","Backspace");assert.equal(game.S.cmp.prefix,"targ");
+  game.play({ctrl:"y"});assert.equal(game.S.lines[0],"local result = target");
+  assert.equal(game.S.won,true);
+});
+
+test("No-match completion leaves text intact and does not offer unrelated words",()=>{
+  const game=createGame();game.load("Autocomplete: accept a suggestion");
+  game.play("Axyz",{ctrl:" "},{ctrl:"y"});
+  assert.equal(game.S.cmp,null);assert.equal(game.S.lines[0],"local result = xyz");
+  assert.equal(game.S.cmpActions.length,0);assert.equal(game.S.won,false);
+  assert.equal(game.document.getElementById("cmp").style.display,"none");
+});
+
+test("Next and previous suggestions wrap and keep the prefix unchanged",()=>{
+  const game=createGame();game.load("Autocomplete: next / previous suggestion");
+  game.play("A",{ctrl:" "},{ctrl:"p"});assert.equal(game.S.cmp.sel,2);
+  game.play({ctrl:"n"});assert.equal(game.S.cmp.sel,0);
+  game.play({ctrl:"n"});assert.equal(game.S.cmp.sel,1);
+  assert.equal(game.S.lines[0],"local result = targ");assert.equal(game.S.won,false);
+  game.play({ctrl:"y"});assert.equal(game.S.lines[0],"local result = targetCount");
+  assert.equal(game.S.won,true);
+});
+
+test("Ctrl-e dismisses without editing, permits continued typing and manual reopening",()=>{
+  const game=createGame();game.load("Autocomplete: dismiss suggestions");
+  game.play("A",{ctrl:"e"},"et");assert.equal(game.S.won,false);
+  game.load("Autocomplete: dismiss suggestions");game.play("A",{ctrl:" "},{ctrl:"e"});
+  assert.equal(game.S.mode,"insert");assert.equal(game.S.lines[0],"local result = targ");
+  assert.equal(game.S.cmp.open,false);assert.equal(game.S.won,false);
+  game.play({ctrl:" "});assert.equal(game.S.cmp.open,true);
+  game.play({ctrl:"e"},"et");assert.equal(game.S.won,true);
+});
+
+test("Closing suggestions by leaving Insert mode cannot substitute for Ctrl-e in the dismiss lesson",()=>{
+  const game=createGame();game.load("Autocomplete: dismiss suggestions");
+  game.play("A",{ctrl:" "},"Escape","Aet");
+  assert.equal(game.S.lines[0],"local result = target");assert.equal(game.S.mode,"insert");
+  assert.equal(game.S.won,false);
+});
+
+for(const exit of ["Escape",ctrlC]){
+  test(`Leaving Insert mode closes suggestions in one key: ${typeof exit==="string"?exit:"Ctrl-c"}`,()=>{
+    const game=createGame();game.load("Autocomplete: accept a suggestion");
+    game.play("Atarg",exit);
+    assert.equal(game.S.mode,"normal");assert.equal(game.S.cmp.open,false);
+    assert.equal(game.S.lines[0],"local result = targ");assert.equal(game.S.cursor.col,18);
+    assert.equal(game.S.won,false);
+    game.play("A",{ctrl:" "},{ctrl:"y"});assert.equal(game.S.won,true);
+  });
+}
+
+test("Enter adds a newline and Tab explains the acceptance key",()=>{
+  const game=createGame();game.load("Autocomplete: accept a suggestion");game.play("Atarg");
+  game.press("Tab");assert.equal(game.S.cmp.open,true);
+  assert.equal(game.S.lines[0],"local result = targ");
+  assert.match(game.document.getElementById("toast").textContent,/Ctrl y/);
+  game.play("Enter");assert.equal(game.S.lines.join("\n"),"local result = targ\n");
+  assert.equal(game.S.cmp.open,false);
+  assert.equal(game.S.cmpActions.some(action=>action.kind==="accept"),false);
+});
+
+test("Accepting completion preserves text after the cursor and can be undone and redone",()=>{
+  const game=createGame();game.load("Autocomplete: next / previous suggestion");
+  game.S.lines=["local result = targ + tail"];game.S.cursor.col=19;
+  game.play("a",{ctrl:" "},{ctrl:"y"});
+  assert.equal(game.S.lines[0],"local result = target + tail");assert.equal(game.S.cursor.col,21);
+  game.play("Escape","u");assert.equal(game.S.lines[0],"local result = targ + tail");
+  game.play({ctrl:"r"});assert.equal(game.S.lines[0],"local result = target + tail");
+});
+
+test("Reset clears the completion menu and its actions across lessons",()=>{
+  const game=createGame();game.load("Autocomplete: accept a suggestion");
+  game.play("Atarg",{ctrl:"n"});assert.ok(game.S.cmpActions.length);
+  game.load("Autocomplete: dismiss suggestions");
+  assert.equal(game.S.cmp,null);assert.equal(game.S.cmpActions.length,0);
+  assert.equal(game.document.getElementById("cmp").style.display,"none");assert.equal(game.S.won,false);
 });

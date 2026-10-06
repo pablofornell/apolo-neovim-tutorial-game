@@ -79,11 +79,15 @@ function render(){
   // nvim-cmp floating menu
   const cmpEl=document.getElementById("cmp");
   if(S.cmp&&S.cmp.open&&S.mode==="insert"){
-    cmpEl.innerHTML=S.cmp.items.map((it,i)=>
-      `<div class="cmprow${i===S.cmp.sel?' sel':''}"><span class="ic"></span>${esc(it)}<span class="kind">text</span></div>`).join("");
-    const cell=buf.querySelector(".row.cur .cur-cell"), ed=document.getElementById("editor");
-    if(cell){ const cr=cell.getBoundingClientRect(), er=ed.getBoundingClientRect();
-      cmpEl.style.left=(cr.left-er.left)+"px"; cmpEl.style.top=(cr.bottom-er.top+2)+"px"; }
+    cmpEl.innerHTML='<div role="listbox" aria-label="Completion suggestions">'+S.cmp.items.map((it,i)=>
+      `<div role="option" aria-selected="${i===S.cmp.sel}" class="cmprow${i===S.cmp.sel?' sel':''}"><span class="ic" aria-hidden="true"></span>${esc(it)}<span class="kind">text</span></div>`).join("")+
+      '</div><div class="cmpfoot"><span><kbd>Ctrl n/p</kbd> choose</span><span><kbd>Ctrl y</kbd> accept</span><span><kbd>Ctrl e</kbd> dismiss</span></div>';
     cmpEl.style.display="block";
+    const cell=buf.querySelector(".row.cur .cur-cell"), ed=document.getElementById("editor");
+    if(cell){ const cr=cell.getBoundingClientRect(), er=ed.getBoundingClientRect(), br=buf.getBoundingClientRect();
+      const left=clamp(cr.left-er.left,8,Math.max(8,ed.clientWidth-cmpEl.offsetWidth-8));
+      const below=cr.bottom-er.top+2, bottom=br.bottom-er.top;
+      const top=below+cmpEl.offsetHeight<=bottom?below:Math.max(8,cr.top-er.top-cmpEl.offsetHeight-2);
+      cmpEl.style.left=left+"px"; cmpEl.style.top=top+"px"; }
   }else cmpEl.style.display="none";
 }

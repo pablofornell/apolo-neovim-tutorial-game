@@ -250,44 +250,60 @@ function moveLines(dir){
 }
 
 /* ---- insert mode ---- */
-function openCmp(){
+function openCmp(automatic=false){
   const l=curLine(); let s=S.cursor.col;
   while(s>0&&/\w/.test(l[s-1]))s--;
   const prefix=l.slice(s,S.cursor.col);
-  const pool=["compute","computed","comparison","complete","config","callback","capacity","require","return","results"];
-  let items=pool.filter(x=>x.startsWith(prefix)&&x!==prefix);
-  if(!items.length) items=pool.slice(0,6);
-  S.cmp={open:true,items,sel:0,start:s,prefix};
+  const pool=PLAYABLE[curIdx].completions || ["compute","computed","comparison","complete","config","callback","capacity","require","return","results"];
+  const items=pool.filter(x=>x.startsWith(prefix)&&x!==prefix);
+  if(!items.length || (automatic && prefix.length<2)){S.cmp=null;return false;}
+  S.cmp={open:true,items,sel:0,start:s,prefix,row:S.cursor.row};
+  return true;
+}
+function refreshCmp(){
+  if(PLAYABLE[curIdx].autoComplete)openCmp(true);
+}
+function cmpDismiss(key){
+  S.cmpActions.push({kind:"dismiss",prefix:S.cmp.prefix,key});
+  S.cmp.open=false;
 }
 function cmpConfirm(){
-  if(!S.cmp)return; snapshot();
+  if(!S.cmp || !S.cmp.open || S.cmp.row!==S.cursor.row)return false;
+  snapshot();
   const item=S.cmp.items[S.cmp.sel], l=curLine();
   S.lines[S.cursor.row]=l.slice(0,S.cmp.start)+item+l.slice(S.cursor.col);
   S.cursor.col=S.cmp.start+item.length; S.cmp.open=false;
+  S.cmpActions.push({kind:"accept",prefix:S.cmp.prefix,item});
+  return true;
 }
 function handleInsert(key,e){
   // nvim-cmp completion menu (lazy/lsp.lua)
   if(S.cmp&&S.cmp.open){
-    if(key==="<C-n>"){ S.cmp.sel=(S.cmp.sel+1)%S.cmp.items.length; log("<C-n>"); return; }
-    if(key==="<C-p>"){ S.cmp.sel=(S.cmp.sel-1+S.cmp.items.length)%S.cmp.items.length; log("<C-p>"); return; }
-    if(key==="<C-y>"){ cmpConfirm(); log("<C-y>"); toast('<C-y> → confirm completion'); return; }
+    if(key==="<C-n>" || key==="<C-p>"){
+      S.cmp.sel=(S.cmp.sel+(key==="<C-n>"?1:-1)+S.cmp.items.length)%S.cmp.items.length;
+      S.cmpActions.push({kind:key==="<C-n>"?"next":"previous",prefix:S.cmp.prefix,item:S.cmp.items[S.cmp.sel]});
+      log(key); return;
+    }
+    if(key==="<C-y>"){ if(cmpConfirm()){log("<C-y>");toast('<C-y> → accepted '+S.cmp.items[S.cmp.sel]);} return; }
     if(key==="<C-Space>"){ openCmp(); log("<C-Space>"); return; }
-    if(key==="Escape"||key==="<C-c>"){ S.cmp.open=false; log(key==="<C-c>"?"<C-c>":"Esc"); return; }
+    if(key==="<C-e>"){ cmpDismiss(key);log("<C-e>");toast('<C-e> → dismiss suggestions; keep typing');return; }
+    if(key==="Tab"){toast('Ctrl y accepts the highlighted suggestion');return;}
+    if(key==="Escape"||key==="<C-c>")cmpDismiss(key);
     S.cmp.open=false; // any other key dismisses the menu, then types normally
   }
-  if(key==="<C-Space>"){ openCmp(); log("<C-Space>"); toast('<C-Space> → trigger completion'); return; }
+  if(key==="<C-Space>"){ const opened=openCmp(); log("<C-Space>"); toast(opened?'<C-Space> → trigger completion':'No matching suggestions'); return; }
   if(key==="Escape"||key==="<C-c>"){ setMode("normal");
     S.cursor.col=Math.max(0,S.cursor.col-1); clampCursor(); log(key==="<C-c>"?"<C-c>":"Esc"); return; }
   if(key==="Backspace"){ snapshot(); const l=curLine();
     if(S.cursor.col>0){S.lines[S.cursor.row]=l.slice(0,S.cursor.col-1)+l.slice(S.cursor.col);S.cursor.col--;}
     else if(S.cursor.row>0){const prev=S.lines[S.cursor.row-1];S.cursor.col=prev.length;
-      S.lines[S.cursor.row-1]=prev+l;S.lines.splice(S.cursor.row,1);S.cursor.row--;} return; }
+      S.lines[S.cursor.row-1]=prev+l;S.lines.splice(S.cursor.row,1);S.cursor.row--;} refreshCmp();return; }
   if(key==="Enter"){ snapshot(); const l=curLine();
     const head=l.slice(0,S.cursor.col),tail=l.slice(S.cursor.col);
     S.lines[S.cursor.row]=head; S.lines.splice(S.cursor.row+1,0,tail);
     S.cursor={row:S.cursor.row+1,col:0}; return; }
   if(key.length===1){ snapshot(); const l=curLine();
-    S.lines[S.cursor.row]=l.slice(0,S.cursor.col)+key+l.slice(S.cursor.col); S.cursor.col++; }
+    S.lines[S.cursor.row]=l.slice(0,S.cursor.col)+key+l.slice(S.cursor.col); S.cursor.col++;refreshCmp(); }
 }
 
 /* ---- command line (search & substitute) ---- */

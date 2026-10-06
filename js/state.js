@@ -11,7 +11,7 @@ const S = {
   pending:"", awaitLeader:false, leaderBuf:"", count:"",
   cmd:null, lastSearch:"", searchDir:1,
   undo:[], redo:[], keyLog:[], keys:0, enteredInsert:false,
-  popOpen:false, popKind:null, won:false, cmp:null,
+  popOpen:false, popKind:null, won:false, cmp:null, cmpActions:[],
   // motions & edits: pending find (f/t), last find for ; and ,, pending r, last
   // change for the dot command
   findPending:null, lastFind:null, replacePending:false, dot:null,

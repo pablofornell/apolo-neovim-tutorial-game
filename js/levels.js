@@ -474,8 +474,9 @@ L({title:"LSP completion (cmp)",
    <li><kbd>Ctrl y</kbd><span class="d">confirm the selection</span></li></ul>
   <div class="card do"><h3>Goal</h3>Press <kbd>A</kbd> to append, <kbd>Ctrl</kbd>+<kbd>Space</kbd> to pop the menu, <kbd>Ctrl</kbd>+<kbd>n</kbd> to pick an item, then <kbd>Ctrl</kbd>+<kbd>y</kbd> to accept it.</div>
   <p class="why">cmp uses Select behavior — <kbd>Ctrl n</kbd> only highlights; nothing is inserted until <kbd>Ctrl y</kbd>.</p>`,
-  check:()=>S.lines[0].startsWith("local result = comp") && S.lines[0].length>"local result = comp".length
-            && S.keyLog.includes("<C-Space>") && S.keyLog.includes("<C-y>")}),
+  check:()=>S.lines.join("\n")==="local result = computed" &&
+    S.cmpActions.some(a=>a.kind==="accept" && a.prefix==="comp" && a.item==="computed") &&
+    S.keyLog.includes("<C-Space>") && S.keyLog.includes("<C-n>")}),
 
 L({title:"Treesitter text objects",
   goal:"Delete the whole function with d a f (delete-around-function)",
@@ -490,6 +491,42 @@ L({title:"Treesitter text objects",
   <div class="card do"><h3>Goal</h3>Cursor is inside the function — press <kbd>d</kbd>, then <kbd>a</kbd>, then <kbd>f</kbd>.</div>`,
   check:()=>S.lines.length===2 && !S.lines.join(" ").includes("function") && S.keyLog.includes("daf")}),
 
+{group:"Menus & autocomplete"},
+L({title:"Autocomplete: accept a suggestion",
+  goal:"Type targ, then accept the suggested target with Ctrl y",
+  buf:["local result = "], cur:{row:0,col:14}, autoComplete:true,
+  completions:["target","targetCount","targetName"],
+  lesson:`<h2>Accept an autocomplete suggestion</h2><div class="sub">insert mode · suggestion menu</div>
+  <p>As you type a word, matching suggestions appear. The highlighted item is only a preview; <kbd>Ctrl</kbd>+<kbd>y</kbd> inserts it.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>A</kbd>, type <code>targ</code>, then press <kbd>Ctrl</kbd>+<kbd>y</kbd> to complete it to <code>target</code>.</div>
+  <p class="why">If the menu is closed, <kbd>Ctrl</kbd>+<kbd>Space</kbd> opens it explicitly. <kbd>Esc</kbd> or <kbd>Ctrl</kbd>+<kbd>c</kbd> leaves INSERT mode.</p>`,
+  check:()=>S.lines.join("\n")==="local result = target" &&
+    S.cmpActions.some(a=>a.kind==="accept" && a.prefix==="targ" && a.item==="target")}),
+
+L({title:"Autocomplete: next / previous suggestion",
+  goal:"Open suggestions, move down twice and up once, then accept targetCount",
+  buf:["local result = targ"], cur:{row:0,col:18},
+  completions:["target","targetCount","targetName"],
+  lesson:`<h2>Move through suggestions</h2><div class="sub">insert mode · suggestion menu</div>
+  <p><kbd>Ctrl</kbd>+<kbd>Space</kbd> opens the menu. <kbd>Ctrl</kbd>+<kbd>n</kbd> highlights the next suggestion, and <kbd>Ctrl</kbd>+<kbd>p</kbd> highlights the previous one. <kbd>Ctrl</kbd>+<kbd>y</kbd> accepts the highlighted item.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>A</kbd>, <kbd>Ctrl</kbd>+<kbd>Space</kbd>, <kbd>Ctrl</kbd>+<kbd>n</kbd> twice, <kbd>Ctrl</kbd>+<kbd>p</kbd> once, then <kbd>Ctrl</kbd>+<kbd>y</kbd>. Finish with <code>targetCount</code>.</div>`,
+  check:()=>S.lines.join("\n")==="local result = targetCount" &&
+    S.cmpActions.some(a=>a.kind==="next" && a.prefix==="targ") &&
+    S.cmpActions.some(a=>a.kind==="previous" && a.prefix==="targ") &&
+    S.cmpActions.some(a=>a.kind==="accept" && a.prefix==="targ" && a.item==="targetCount")}),
+
+L({title:"Autocomplete: dismiss suggestions",
+  goal:"Dismiss the menu with Ctrl e, then finish target yourself in INSERT mode",
+  buf:["local result = targ"], cur:{row:0,col:18},
+  completions:["target","targetCount","targetName"],
+  lesson:`<h2>Dismiss suggestions</h2><div class="sub">insert mode · suggestion menu</div>
+  <p><kbd>Ctrl</kbd>+<kbd>e</kbd> closes an open suggestion menu and keeps you in INSERT mode, so you can continue typing. <kbd>Esc</kbd> or <kbd>Ctrl</kbd>+<kbd>c</kbd> leaves INSERT mode.</p>
+  <div class="card do"><h3>Goal</h3>Press <kbd>A</kbd>, <kbd>Ctrl</kbd>+<kbd>Space</kbd>, <kbd>Ctrl</kbd>+<kbd>e</kbd>, then type <code>et</code> yourself to finish <code>target</code>.</div>`,
+  check:()=>S.mode==="insert" && S.lines.join("\n")==="local result = target" &&
+    S.cmpActions.some(a=>a.kind==="dismiss" && a.key==="<C-e>" && a.prefix==="targ") &&
+    !S.cmpActions.some(a=>a.kind==="accept")}),
+
+{group:"Finish"},
 L({title:"Reload config: <leader><leader>",
   goal:"Re-source the config with Space Space — graduation!",
   buf:["-- You've learned the whole config.","-- One last reflex: Space Space  → :so","-- (re-sources the current file)"], cur:{row:0,col:0},
